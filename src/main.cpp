@@ -29,6 +29,7 @@ int count = 0;
 
 String rssi = "";
 
+String incoming = "";
 
 void receiveMessage(int packetSize) {
     if (packetSize == 0) return;
@@ -121,6 +122,9 @@ void loop()
 
     if (millis() - lastSendTime > interval)
     {
+        String ping = "Ping";
+        sendMessage(ping);
+
         Serial.print(" from source 0x" + String(localAddress, HEX));
         Serial.println(" to destination 0x" + String(destinationAddress, HEX));
         Serial.println(LoRa.packetRssi()) ;
