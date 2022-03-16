@@ -30,8 +30,10 @@ byte destinationAddress;
 long lastSendTime = 0;
 int interval = 2000;
 int count = 0;
-int old_received = 0;
+boolean link = 0;
 int ping = 1;
+int link_time = 10000;
+long lastLinkTime
 
 String rssi = "";
 String SNR = "";
@@ -48,6 +50,7 @@ void receiveMessage(int packetSize) {
 
     while (LoRa.available()) {
         incoming += (char)LoRa.read();
+        link = 1;
     }
 
     if (incomingLength != incoming.length()) {
@@ -74,12 +77,6 @@ void sendMessage(String outgoing) {
     LoRa.write(outgoing.length());
     LoRa.print(outgoing);
     LoRa.endPacket();
-}
-
-string LoRaLink(int received) {
-    if (received == old_received) return "Missing Link";
-    else return "LoRa Link";
-    old_received = received;
 }
 
 void setup() {
@@ -149,11 +146,18 @@ void loop() {
         else ping = 1;
     }
 
+    if (millis() - lastLinkTime > link_time)
+    {
+        link = 0;
+        lastLinkTime = millis();
+    }
+
     // Displayausgabe
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(ArialMT_Plain_16);
-    //display.drawString(0, 0, LoRaLink(incoming));
+    if (link == 1) display.drawString(0, 0, "LoRa linked");
+    else display.drawString(0, 0, "Link failed");
     display.drawString(0, 16, rssi);
     display.drawString(0, 32, SNR);
     display.drawString(0, 48, "Local:    " + String(localAddress) /*String(toggle)*/);
