@@ -4,10 +4,6 @@
 #include <SPI.h>
 #include <LoRa.h>
 #include "SSD1306.h"
-#include <SoftwareSerial.h>
-#include <ArduinoJson.h>
-
-using namespace std;
 
 // LoRa Defs
 #define SCK     5       // GPIO5  -- SX1278's SCK
@@ -23,17 +19,17 @@ SSD1306 display(0x3c, 21, 22);
 
 const byte switchPin = 38;
 byte oldSwitchState = HIGH;
-int toggle;
+int toggle = 0;
 
-byte localAddress;
-byte destinationAddress;
+byte localAddress = 0xAA;
+byte destinationAddress = 0xBB;
 long lastSendTime = 0;
-int interval = 2000;
+int interval = 1000;
 int count = 0;
-boolean link = 0;
+bool linked = false;
 int ping = 1;
 int link_time = 10000;
-long lastLinkTime
+long lastLinkTime = 0;
 
 String rssi = "";
 String SNR = "";
@@ -50,7 +46,7 @@ void receiveMessage(int packetSize) {
 
     while (LoRa.available()) {
         incoming += (char)LoRa.read();
-        link = 1;
+        linked = true;
     }
 
     if (incomingLength != incoming.length()) {
@@ -148,7 +144,7 @@ void loop() {
 
     if (millis() - lastLinkTime > link_time)
     {
-        link = 0;
+        linked = false;
         lastLinkTime = millis();
     }
 
@@ -156,8 +152,13 @@ void loop() {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(ArialMT_Plain_16);
-    if (link == 1) display.drawString(0, 0, "LoRa linked");
-    else display.drawString(0, 0, "Link failed");
+    if (linked)
+    {
+        display.drawString(0, 0, "LoRa linked");
+    } else 
+    {
+        display.drawString(0, 0, "Link failed");
+    }
     display.drawString(0, 16, rssi);
     display.drawString(0, 32, SNR);
     display.drawString(0, 48, "Local:    " + String(localAddress) /*String(toggle)*/);
