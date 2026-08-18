@@ -26,14 +26,39 @@ void display_showStatus(bool linked, const String &rssi, const String &snr, cons
     display.display();
 }
 
-void display_showMenu(const String &title, const String &value, const String &hint) {
+void display_showMenu(const String &title, const String &value, const String &hint, bool titleInverted, bool valueInverted) {
     display.clear();
     display.setTextAlignment(TEXT_ALIGN_LEFT);
+
+    // Title area (y=0..15)
     display.setFont(ArialMT_Plain_10);
-    display.drawString(0, 0, title);
+    if (titleInverted) {
+        display.setColor(WHITE);
+        display.fillRect(0, 0, 128, 16);
+        display.setColor(BLACK);
+        display.drawString(0, 0, title);
+        display.setColor(WHITE);
+    } else {
+        display.setColor(WHITE);
+        display.drawString(0, 0, title);
+    }
+
+    // Value area (y ~18..35)
     display.setFont(ArialMT_Plain_16);
-    display.drawString(0, 18, value);
+    if (valueInverted) {
+        display.setColor(WHITE);
+        display.fillRect(0, 16, 128, 26);
+        display.setColor(BLACK);
+        display.drawString(0, 18, value);
+        display.setColor(WHITE);
+    } else {
+        display.setColor(WHITE);
+        display.drawString(0, 18, value);
+    }
+
+    // Hint at bottom
     display.setFont(ArialMT_Plain_10);
+    display.setColor(WHITE);
     display.drawString(0, 50, hint);
     display.display();
 }

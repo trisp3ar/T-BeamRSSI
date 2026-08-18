@@ -47,7 +47,7 @@ void menu_loop(int ui_event) {
         }
     }
 
-    // Titles: Node ID, TX Power, Run RSSI Sweep, Save & Exit, Factory Reset
+    // Titles: Node ID, TX Power, Run RSSI Sweep, Factory Reset, Exit
     String title;
     String val;
     String hint = "short=next long=ok";
@@ -56,11 +56,14 @@ void menu_loop(int ui_event) {
         case 0: title = "Node ID"; val = config_nodeIdHex(); break;
         case 1: title = "TX Power"; val = txPowerToString(txPower); break;
         case 2: title = "Run RSSI Sweep"; val = "Press long to run"; break;
-        case 3: title = "Save & Exit"; val = "Save settings"; break;
-        case 4: title = "Factory Reset"; val = "Reset defaults"; break;
+        case 3: title = "Factory Reset"; val = "Reset defaults"; break;
+        case 4: title = "Exit"; val = "Long=exit & save"; break;
     }
 
-    display_showMenu(title, val, hint);
+    // Visuals: when not editing show inverted title; when editing, invert the value and keep title normal
+    bool titleInverted = !editing;
+    bool valueInverted = editing;
+    display_showMenu(title, val, hint, titleInverted, valueInverted);
 
     if (ui_event == 0) return;
 
@@ -76,18 +79,16 @@ void menu_loop(int ui_event) {
                 // Start a non-blocking RSSI sweep: send 1 ping per menu tick
                 sweep_remaining = 10; // send 10 pings
             } else if (menuIndex == 3) {
-                // Save & Exit
-                config_save();
-                config_apply();
-                active = false;
-            } else if (menuIndex == 4) {
                 // Factory Reset
                 config_factoryReset();
                 active = false;
-            } else if (menuIndex == 0) {
-                // long press on Node ID exits without saving
+            } else if (menuIndex == 4) {
+                // Exit item: save and exit on long press
+                config_save();
+                config_apply();
                 active = false;
             } else {
+                // enter editing mode for editable items (Node ID, TX Power)
                 editing = true;
             }
         }
@@ -101,7 +102,26 @@ void menu_loop(int ui_event) {
                 else if (txPower == 14) txPower = 10;
                 else txPower = 20;
             }
-            if (ui_event == 2) { editing = false; }
+            if (ui_event == 2) {
+                // long press to confirm: save immediately and exit editing
+                editing = false;
+                config_save();
+                config_apply();
+            }
+        }
+        else if (menuIndex == 0) {
+            // Node ID editing
+            if (ui_event == 1) {
+                // increment node id, avoid 0xFFFF (reserved for broadcast)
+                node_id++;
+                if (node_id == 0xFFFF) node_id = 0;
+            }
+            if (ui_event == 2) {
+                // confirm and save
+                editing = false;
+                config_save();
+                config_apply();
+            }
         }
         
     }
