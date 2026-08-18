@@ -7,13 +7,12 @@ void peers_init() {
     for (int i = 0; i < PEERS_MAX; ++i) peers[i].valid = false;
 }
 
-void peers_add_or_update(uint16_t id, int rssi, float snr) {
+void peers_add_or_update(uint16_t id, int rssi) {
     // ignore if id == our own (optional)
     // find existing
     for (int i = 0; i < PEERS_MAX; ++i) {
         if (peers[i].valid && peers[i].id == id) {
             peers[i].rssi = rssi;
-            peers[i].snr = snr;
             peers[i].lastSeen = millis();
             return;
         }
@@ -24,7 +23,6 @@ void peers_add_or_update(uint16_t id, int rssi, float snr) {
             peers[i].valid = true;
             peers[i].id = id;
             peers[i].rssi = rssi;
-            peers[i].snr = snr;
             peers[i].lastSeen = millis();
             return;
         }
@@ -37,9 +35,19 @@ void peers_add_or_update(uint16_t id, int rssi, float snr) {
     }
     peers[oldest].id = id;
     peers[oldest].rssi = rssi;
-    peers[oldest].snr = snr;
     peers[oldest].lastSeen = millis();
     peers[oldest].valid = true;
+}
+
+void peers_cleanup(unsigned long maxAgeMs) {
+    unsigned long now = millis();
+    for (int i = 0; i < PEERS_MAX; ++i) {
+        if (peers[i].valid) {
+            if (now - peers[i].lastSeen > maxAgeMs) {
+                peers[i].valid = false;
+            }
+        }
+    }
 }
 
 int peers_count() {

@@ -38,7 +38,6 @@ void menu_loop(int ui_event) {
         String payload;
         if (lora_readIncoming(packetSize, sender, payload)) {
             rssi = "RSSI:   " + String(lora_packetRssi()) + " dBm";
-            SNR = "SNR:     " + String(lora_packetSnr()) + " dB";
             linked = true;
             lastLinkTime = millis();
             // print discovered peer

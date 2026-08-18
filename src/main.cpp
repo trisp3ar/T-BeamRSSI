@@ -8,6 +8,7 @@
 #include "menu.h"
 #include "status.h"
 #include "peers.h"
+#include "battery.h"
 
 long lastSendTime = 0;
 int interval = 1000;
@@ -18,7 +19,6 @@ int ping = 1;
 bool linked = false;
 unsigned long lastLinkTime = 0;
 String rssi = "";
-String SNR = "";
 int main_page = 0;
 
 void setup() {
@@ -34,6 +34,7 @@ void setup() {
     display_init();
     menu_init();
     peers_init();
+    battery_init();
 }
 
 void loop() {
@@ -84,16 +85,20 @@ void loop() {
         String payload;
         if (lora_readIncoming(packetSize, senderId, payload)) {
             rssi = "RSSI:   " + String(lora_packetRssi()) + " dBm";
-            SNR = "SNR:     " + String(lora_packetSnr()) + " dB";
             linked = true;
             lastLinkTime = millis();
             // add peer discovery (print sender id)
             char buf[7]; sprintf(buf, "0x%04X", senderId);
             Serial.print("Received from "); Serial.println(buf);
             Serial.print("Payload: "); Serial.println(payload);
-            peers_add_or_update(senderId, lora_packetRssi(), lora_packetSnr());
+            peers_add_or_update(senderId, lora_packetRssi());
         }
     }
+            // purge peers not seen for more than 60s
+            peers_cleanup(60000);
+            int pages = peers_pages();
+            if (pages == 0) pages = 1;
+            if (main_page >= pages) main_page = 0;
             display_showMain(main_page);
     }
 }
