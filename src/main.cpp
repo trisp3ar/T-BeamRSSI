@@ -24,9 +24,6 @@ int main_page = 0;
 void setup() {
     delay(100);
     Serial.begin(9600);
-    Serial.println("Start LoRa duplex");
-    Serial.print("Local node id: ");
-    Serial.println(config_nodeIdHex());
 
     config_init();
     lora_init();
@@ -61,13 +58,6 @@ void loop() {
         uint16_t broadcast = 0xFFFF;
         lora_sendMessageTo(broadcast, "Ping");
 
-        Serial.print("Sent Ping from node " );
-        Serial.println(config_nodeIdHex());
-        Serial.print("RSSI: ");
-        Serial.println(lora_packetRssi());
-        Serial.print("SNR: ");
-        Serial.println(lora_packetSnr());
-
         lastSendTime = millis();
         interval = random(2000) + 100;
         if (ping < 255) ping++;
@@ -89,8 +79,6 @@ void loop() {
             lastLinkTime = millis();
             // add peer discovery (print sender id)
             char buf[7]; sprintf(buf, "0x%04X", senderId);
-            Serial.print("Received from "); Serial.println(buf);
-            Serial.print("Payload: "); Serial.println(payload);
             peers_add_or_update(senderId, lora_packetRssi());
         }
     }
@@ -99,6 +87,13 @@ void loop() {
             int pages = peers_pages();
             if (pages == 0) pages = 1;
             if (main_page >= pages) main_page = 0;
+            // show main page
             display_showMain(main_page);
+            // periodic battery debug print every 5s
+            static unsigned long lastBatDbg = 0;
+            if (millis() - lastBatDbg > 5000) {
+                battery_print_debug();
+                lastBatDbg = millis();
+            }
     }
 }
