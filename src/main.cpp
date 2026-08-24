@@ -9,6 +9,7 @@
 #include "status.h"
 #include "peers.h"
 #include "battery.h"
+#include "gps_wrapper.h"
 
 long lastSendTime = 0;
 int interval = 1000;
@@ -32,9 +33,11 @@ void setup() {
     menu_init();
     peers_init();
     battery_init();
+    gps_init();
 }
 
 void loop() {
+    gps_update();
     int evt = ui_pollEvent();
     if (!menu_isActive() && evt == 2) {
         // long press enters menu; consume event so menu doesn't re-handle it
@@ -94,6 +97,12 @@ void loop() {
             if (millis() - lastBatDbg > 5000) {
                 battery_print_debug();
                 lastBatDbg = millis();
+            }
+            // periodic GPS location debug print every 5s
+            static unsigned long lastGpsDbg = 0;
+            if (millis() - lastGpsDbg > 5000) {
+                gps_print_debug();
+                lastGpsDbg = millis();
             }
     }
 }
