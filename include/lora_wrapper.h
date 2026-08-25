@@ -13,5 +13,7 @@ float lora_packetSnr();
 bool lora_readIncoming(int packetSize, uint16_t &sender, String &payload);
 
 void lora_applyConfig(long band, int txPower);
+void lora_setEncryptionEnabled(bool enabled);
+bool lora_isEncryptionEnabled();
 
 #endif

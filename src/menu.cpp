@@ -9,7 +9,7 @@ static bool active = false;
 static int menuIndex = 0;
 static bool editing = false;
 
-static const int MENU_COUNT = 5;
+static const int MENU_COUNT = 6;
 
 void menu_init() {
     active = false;
@@ -26,6 +26,10 @@ bool menu_isActive() { return active; }
 
 static String txPowerToString(int p) {
     return String(p) + " dBm";
+}
+
+static String encryptionModeToString(bool enabled) {
+    return enabled ? "AES-256" : "Plaintext";
 }
 
 void menu_loop(int ui_event) {
@@ -46,7 +50,7 @@ void menu_loop(int ui_event) {
         }
     }
 
-    // Titles: Node ID, TX Power, Run RSSI Sweep, Factory Reset, Exit
+    // Titles: Node ID, TX Power, Encryption, Run RSSI Sweep, Factory Reset, Exit
     String title;
     String val;
     String hint = "short=next long=ok";
@@ -54,9 +58,10 @@ void menu_loop(int ui_event) {
     switch (menuIndex) {
         case 0: title = "Node ID"; val = config_nodeIdHex(); break;
         case 1: title = "TX Power"; val = txPowerToString(txPower); break;
-        case 2: title = "Run RSSI Sweep"; val = "Press long to run"; break;
-        case 3: title = "Factory Reset"; val = "Reset defaults"; break;
-        case 4: title = "Exit"; val = "Long=exit & save"; break;
+        case 2: title = "Encryption"; val = encryptionModeToString(loraEncryptionEnabled); break;
+        case 3: title = "Run RSSI Sweep"; val = "Press long to run"; break;
+        case 4: title = "Factory Reset"; val = "Reset defaults"; break;
+        case 5: title = "Exit"; val = "Long=exit & save"; break;
     }
 
     // Visuals: when not editing show inverted title; when editing, invert the value and keep title normal
@@ -74,20 +79,20 @@ void menu_loop(int ui_event) {
             menuIndex = (menuIndex + 1) % MENU_COUNT;
         } else if (ui_event == 2) {
             // long press: enter/edit/activate
-            if (menuIndex == 2) {
+            if (menuIndex == 3) {
                 // Start a non-blocking RSSI sweep: send 1 ping per menu tick
                 sweep_remaining = 10; // send 10 pings
-            } else if (menuIndex == 3) {
+            } else if (menuIndex == 4) {
                 // Factory Reset
                 config_factoryReset();
                 active = false;
-            } else if (menuIndex == 4) {
+            } else if (menuIndex == 5) {
                 // Exit item: save and exit on long press
                 config_save();
                 config_apply();
                 active = false;
             } else {
-                // enter editing mode for editable items (Node ID, TX Power)
+                // enter editing mode for editable items (Node ID, TX Power, Encryption)
                 editing = true;
             }
         }
@@ -103,6 +108,17 @@ void menu_loop(int ui_event) {
             }
             if (ui_event == 2) {
                 // long press to confirm: save immediately and exit editing
+                editing = false;
+                config_save();
+                config_apply();
+            }
+        }
+        else if (menuIndex == 2) {
+            // Encryption mode selection
+            if (ui_event == 1) {
+                loraEncryptionEnabled = !loraEncryptionEnabled;
+            }
+            if (ui_event == 2) {
                 editing = false;
                 config_save();
                 config_apply();

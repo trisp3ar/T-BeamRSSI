@@ -11,6 +11,7 @@ extern uint16_t node_id;
 extern int link_time;
 
 extern int txPower;
+extern bool loraEncryptionEnabled;
 
 void config_init();
 void config_load();

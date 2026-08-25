@@ -12,6 +12,7 @@ uint16_t node_id = 0;
 int link_time = 10000;
 
 int txPower = DEFAULT_TX_POWER;
+bool loraEncryptionEnabled = true;
 
 static Preferences prefs;
 
@@ -32,14 +33,17 @@ void config_load() {
         node_id = (uint16_t)saved;
     }
     txPower = prefs.getInt("txp", DEFAULT_TX_POWER);
+    loraEncryptionEnabled = prefs.getBool("enc", true);
 }
 
 void config_save() {
     prefs.putInt("node", (int)node_id);
     prefs.putInt("txp", txPower);
+    prefs.putBool("enc", loraEncryptionEnabled);
 }
 
 void config_apply() {
+    lora_setEncryptionEnabled(loraEncryptionEnabled);
     // Apply LoRa settings (frequency fixed)
     lora_applyConfig(DEFAULT_BAND, txPower);
 }
@@ -49,6 +53,7 @@ void config_factoryReset() {
     // reset node id to newly generated random value
     node_id = (uint16_t)(esp_random() & 0xFFFF);
     txPower = DEFAULT_TX_POWER;
+    loraEncryptionEnabled = true;
     config_save();
     config_apply();
 }
