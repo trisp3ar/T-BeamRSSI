@@ -11,10 +11,13 @@ typedef struct {
     int rssi;
     unsigned long lastSeen;
     bool valid;
+    bool hasPosition;
+    double latitude;
+    double longitude;
 } PeerEntry;
 
 void peers_init();
-void peers_add_or_update(uint16_t id, int rssi);
+void peers_add_or_update(uint16_t id, int rssi, bool hasPosition = false, double latitude = 0.0, double longitude = 0.0);
 void peers_cleanup(unsigned long maxAgeMs);
 int peers_count();
 int peers_pages();

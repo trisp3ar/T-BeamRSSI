@@ -1,4 +1,5 @@
 #include "gps_wrapper.h"
+#include <math.h>
 
 #ifdef ARDUINO
 #include <TinyGPSPlus.h>
@@ -113,6 +114,19 @@ double gps_getLastLongitude() {
 #else
     return 0.0;
 #endif
+}
+
+double gps_distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+    const double EARTH_RADIUS_M = 6371000.0;
+    const double degToRad = 3.14159265358979323846 / 180.0;
+    double lat1Rad = lat1 * degToRad;
+    double lat2Rad = lat2 * degToRad;
+    double dLat = (lat2 - lat1) * degToRad;
+    double dLon = (lon2 - lon1) * degToRad;
+    double a = sin(dLat / 2) * sin(dLat / 2) +
+               cos(lat1Rad) * cos(lat2Rad) * sin(dLon / 2) * sin(dLon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return EARTH_RADIUS_M * c;
 }
 
 void gps_print_debug() {

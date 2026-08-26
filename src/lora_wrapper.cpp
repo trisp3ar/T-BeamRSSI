@@ -240,21 +240,24 @@ float lora_packetSnr() { return LoRa.packetSnr(); }
 bool isBroadcast(uint16_t addr) { return addr == 0xFFFF; }
 
 static void lora_printReceivedGps(uint16_t sender, const String &payload) {
-    int gpsStart = payload.indexOf("|gps=");
-    if (gpsStart < 0) return;
-
     double latitude = 0.0;
     double longitude = 0.0;
+    if (!lora_extractGps(payload, latitude, longitude)) return;
+    Serial.printf("Received GPS from 0x%04X: %.5f, %.5f\n", sender, latitude, longitude);
+}
+
+bool lora_extractGps(const String &payload, double &latitude, double &longitude) {
+    int gpsStart = payload.indexOf("|gps=");
+    if (gpsStart < 0) return false;
+
     char extra = '\0';
     const char *coordinates = payload.c_str() + gpsStart + 5;
     if (sscanf(coordinates, "%lf,%lf%c", &latitude, &longitude, &extra) != 2 ||
         latitude < -90.0 || latitude > 90.0 ||
         longitude < -180.0 || longitude > 180.0) {
-        Serial.printf("Received invalid GPS payload from 0x%04X\n", sender);
-        return;
+        return false;
     }
-
-    Serial.printf("Received GPS from 0x%04X: %.5f, %.5f\n", sender, latitude, longitude);
+    return true;
 }
 
 bool lora_readIncoming(int packetSize, uint16_t &sender, String &payload) {

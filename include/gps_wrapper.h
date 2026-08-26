@@ -15,4 +15,7 @@ double gps_getLastLatitude(); // persisted last known latitude in degrees
 double gps_getLastLongitude(); // persisted last known longitude in degrees
 void gps_print_debug();
 
+// Great-circle distance between two coordinates, in meters.
+double gps_distanceMeters(double lat1, double lon1, double lat2, double lon2);
+
 #endif

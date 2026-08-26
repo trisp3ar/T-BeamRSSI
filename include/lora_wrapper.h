@@ -11,6 +11,8 @@ float lora_packetSnr();
 // returns true if a valid packet addressed to this node (or broadcast) was read;
 // fills sender (16-bit) and payload string
 bool lora_readIncoming(int packetSize, uint16_t &sender, String &payload);
+// extracts the "|gps=lat,lon" section appended by lora_sendMessageTo, if present
+bool lora_extractGps(const String &payload, double &latitude, double &longitude);
 
 void lora_applyConfig(long band, int txPower);
 void lora_setEncryptionEnabled(bool enabled);

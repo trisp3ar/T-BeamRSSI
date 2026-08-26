@@ -7,13 +7,19 @@ void peers_init() {
     for (int i = 0; i < PEERS_MAX; ++i) peers[i].valid = false;
 }
 
-void peers_add_or_update(uint16_t id, int rssi) {
+void peers_add_or_update(uint16_t id, int rssi, bool hasPosition, double latitude, double longitude) {
     // ignore if id == our own (optional)
     // find existing
     for (int i = 0; i < PEERS_MAX; ++i) {
         if (peers[i].valid && peers[i].id == id) {
             peers[i].rssi = rssi;
             peers[i].lastSeen = millis();
+            // keep the last known position if this update didn't include one
+            if (hasPosition) {
+                peers[i].hasPosition = true;
+                peers[i].latitude = latitude;
+                peers[i].longitude = longitude;
+            }
             return;
         }
     }
@@ -24,6 +30,9 @@ void peers_add_or_update(uint16_t id, int rssi) {
             peers[i].id = id;
             peers[i].rssi = rssi;
             peers[i].lastSeen = millis();
+            peers[i].hasPosition = hasPosition;
+            peers[i].latitude = latitude;
+            peers[i].longitude = longitude;
             return;
         }
     }
@@ -37,6 +46,9 @@ void peers_add_or_update(uint16_t id, int rssi) {
     peers[oldest].rssi = rssi;
     peers[oldest].lastSeen = millis();
     peers[oldest].valid = true;
+    peers[oldest].hasPosition = hasPosition;
+    peers[oldest].latitude = latitude;
+    peers[oldest].longitude = longitude;
 }
 
 void peers_cleanup(unsigned long maxAgeMs) {

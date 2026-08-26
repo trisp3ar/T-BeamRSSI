@@ -82,7 +82,9 @@ void loop() {
             lastLinkTime = millis();
             // add peer discovery (print sender id)
             char buf[7]; sprintf(buf, "0x%04X", senderId);
-            peers_add_or_update(senderId, lora_packetRssi());
+            double peerLat = 0.0, peerLon = 0.0;
+            bool peerHasPosition = lora_extractGps(payload, peerLat, peerLon);
+            peers_add_or_update(senderId, lora_packetRssi(), peerHasPosition, peerLat, peerLon);
         }
     }
             // purge peers not seen for more than 60s

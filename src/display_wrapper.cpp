@@ -10,6 +10,16 @@ static const int SAT_ICON_SIZE = 16;
 
 SSD1306 display(0x3c, 21, 22);
 
+static String formatDistance(double meters) {
+    char buf[16];
+    if (meters < 1000.0) {
+        sprintf(buf, "%dm", (int)(meters + 0.5));
+    } else {
+        sprintf(buf, "%.2fkm", meters / 1000.0);
+    }
+    return String(buf);
+}
+
 void display_init() {
     display.init();
     display.flipScreenVertically();
@@ -99,11 +109,19 @@ void display_showMain(int page) {
     // list peers
     PeerEntry entries[PEERS_PER_PAGE];
     int got = peers_get_page(page, entries, PEERS_PER_PAGE);
+    bool ownPositionKnown = gps_hasLastKnownPosition();
+    double ownLat = gps_getLastLatitude();
+    double ownLon = gps_getLastLongitude();
     for (int i = 0; i < got; ++i) {
         int y = 12 + i * 10;
         char buf[64];
         sprintf(buf, "0x%04X %ddBm", entries[i].id, entries[i].rssi);
-        display.drawString(0, y, String(buf));
+        String line = String(buf);
+        if (ownPositionKnown && entries[i].hasPosition) {
+            double distance = gps_distanceMeters(ownLat, ownLon, entries[i].latitude, entries[i].longitude);
+            line += " " + formatDistance(distance);
+        }
+        display.drawString(0, y, line);
     }
 
     // bottom-left: last known GPS location (persisted), or placeholder if never available
